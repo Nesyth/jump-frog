@@ -1,0 +1,18 @@
+# Dirs
+/include
+/lib
+
+# Executables
+*.o
+*.exe
+*.out
+*~
+play
+
+# User added
+.vscode
+.DS_Store
+_build
+*.code-workspace
+Makefile
+
