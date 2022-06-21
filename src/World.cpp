@@ -4,6 +4,7 @@
 #include "Game.h"
 
 #include <vector>
+#include <iostream>
 
 // std::vector<SDL_Rect> obs;
 
@@ -18,11 +19,12 @@
 // SDL_Rect obs[3];
 
 std::vector<SDL_Rect> obs;
+int tmp = 0;
 
 World::World() {
     SDL_Rect rect;
 
-    rect.w = WIDTH; rect.h = 40; rect.x = 0; rect.y = HEIGHT;
+    rect.w = WIDTH; rect.h = 120; rect.x = 0; rect.y = HEIGHT - 40;
     obs.push_back(rect);
 
     // ------------------------------------------------ //
@@ -79,10 +81,14 @@ std::vector<SDL_Rect> World::getObs() {
     
 // }
 
-void World::draw(SDL_Renderer* renderer) {
+void World::draw(SDL_Renderer* renderer, int scrollY) {
     SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-    for (auto obstacle : obs) {
-        SDL_RenderFillRect(renderer, &obstacle);
+    for (int i = 0; i < obs.size(); i++) {
+        SDL_Rect newObstacle = { obs[i].x, obs[i].y + scrollY, obs[i].w, obs[i].h };
+        obs[i] = newObstacle;
+
+        // std::cout << "counter: " << tmp++ << " scroll: " << scrollY << " obs: " << obstacle.y << std::endl;
+        // std::cout << "obsAfter: " << obstacle.y;
+        SDL_RenderFillRect(renderer, &obs[i]);
     }
-    // SDL_RenderFillRects(renderer, obs, 3);
 }

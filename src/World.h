@@ -10,7 +10,7 @@ class World {
         World();
         // ~World();
         // void render();
-        void draw(SDL_Renderer* renderer);
+        void draw(SDL_Renderer* renderer, int scrollY);
         std::vector<SDL_Rect> getObs();
 };
 

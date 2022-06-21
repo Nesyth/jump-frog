@@ -19,8 +19,9 @@ class Player {
         void draw(SDL_Renderer* renderer);
         void handleEvents(SDL_Event &event);
         bool jumping();
-        void move(std::string collision);
+        void move(std::string collision, int collisionHeight);
         // void move(SDL_bool collision);
+        int getScrollY();
         void destroyImage();
 };
 

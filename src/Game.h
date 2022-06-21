@@ -28,7 +28,7 @@ class Game {
         void handleEvents();
         bool running();
         void checkIntersect(SDL_Rect a, std::vector<SDL_Rect> b);
-        void fixCollision(SDL_Rect a, SDL_Rect b);
+        void fixCollision(SDL_Rect a, SDL_Rect b, SDL_Rect collisionHeight);
         float getDeltaTime();
     private:
         Game* game;

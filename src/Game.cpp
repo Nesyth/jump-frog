@@ -12,6 +12,8 @@ SDL_Texture* playerTexture;
 Player* player = nullptr;
 World* world = nullptr;
 std::string collision;
+int collisionHeight;
+SDL_Rect collisionRect;
 
 Game::Game() {
     window = NULL;
@@ -84,12 +86,13 @@ void Game::checkIntersect(SDL_Rect a, std::vector<SDL_Rect> b) {
 
     for (SDL_Rect rects : b) {
         if (SDL_HasIntersection(&a, &rects)) {
-            fixCollision(a, rects);
+            SDL_IntersectRect(&a, &rects, &collisionRect);
+            fixCollision(a, rects, collisionRect);
         }
     }
 }
 
-void Game::fixCollision(SDL_Rect a, SDL_Rect b) {
+void Game::fixCollision(SDL_Rect a, SDL_Rect b, SDL_Rect collisionRect) {
     int leftA, leftB;
     int rightA, rightB;
     int topA, topB;
@@ -131,6 +134,7 @@ void Game::fixCollision(SDL_Rect a, SDL_Rect b) {
     }
 
     collision = result;
+    collisionHeight = collisionRect.h;
 
     // if ((topA - bottomB >= 10 && topA - bottomB <= -10)) {
     //     collision = "head";
@@ -145,7 +149,7 @@ void Game::fixCollision(SDL_Rect a, SDL_Rect b) {
 void Game::update() {
     collision = "false";
     checkIntersect(player->getRect(), world->getObs());
-    player->move(collision);
+    player->move(collision, collisionHeight);
 }
 
 // float Game::getDeltaTime() {
@@ -161,7 +165,7 @@ void Game::render() {
     SDL_RenderClear(renderer);
 
     player->draw(renderer);
-    world->draw(renderer);
+    world->draw(renderer, player->getScrollY());
 
     SDL_RenderPresent(renderer);
 }
