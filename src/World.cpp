@@ -6,25 +6,14 @@
 #include <vector>
 #include <iostream>
 
-// std::vector<SDL_Rect> obs;
-
-// World::World() {
-//     obs.push_back(800, 40, 0, 600);
-// }
-
-// std::vector<SDL_Rect> World::getObs() {
-//     return getObs();
-// }
-
-// SDL_Rect obs[3];
-
 std::vector<SDL_Rect> obs;
-int tmp = 0;
+SDL_Texture* tileTexture;
+SDL_Texture* fTileTexture;
 
 World::World() {
     SDL_Rect rect;
 
-    rect.w = WIDTH; rect.h = 120; rect.x = 0; rect.y = HEIGHT - 40;
+    rect.w = WIDTH; rect.h = 400; rect.x = 0; rect.y = HEIGHT - 40;
     obs.push_back(rect);
 
     // ------------------------------------------------ //
@@ -52,43 +41,34 @@ std::vector<SDL_Rect> World::getObs() {
     return obs;
 }
 
-// World::World() {
-//     obs[0].w = 320; 
-//     obs[0].h = 40;
-//     obs[0].x = 400;
-//     obs[0].y = (HEIGHT - obs[1].y)/2 + 100;
+void World::init(SDL_Renderer* renderer) {
+    loadImage(renderer);
+}
 
-//     obs[1].w = 800; 
-//     obs[1].h = 40;
-//     obs[1].x = 0;
-//     obs[1].y = 600;
+SDL_Texture* World::loadImage(SDL_Renderer* renderer) {
+    tileTexture = IMG_LoadTexture(renderer, TILE_IMG_PATH);
+    fTileTexture = IMG_LoadTexture(renderer, FTILE_IMG_PATH);
 
-//     obs[2].w = 320; 
-//     obs[2].h = 40;
-//     obs[2].x = 100;
-//     obs[2].y = (HEIGHT - obs[2].y)/2 - 100;
-// }
+    return tileTexture;
+}
 
-// SDL_Rect *World::getObs() {
-//     return obs;
-// }
-
-// World::~World() {
-
-// }
-
-// void World::render() {
-    
-// }
-
-void World::draw(SDL_Renderer* renderer, int scrollY) {
-    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+int World::update (int scrollUpdate) {
     for (int i = 0; i < obs.size(); i++) {
-        SDL_Rect newObstacle = { obs[i].x, obs[i].y + scrollY, obs[i].w, obs[i].h };
+        SDL_Rect newObstacle = { obs[i].x, obs[i].y + scrollUpdate, obs[i].w, obs[i].h };
         obs[i] = newObstacle;
 
-        // std::cout << "counter: " << tmp++ << " scroll: " << scrollY << " obs: " << obstacle.y << std::endl;
-        // std::cout << "obsAfter: " << obstacle.y;
-        SDL_RenderFillRect(renderer, &obs[i]);
+        // if (i == 0) std::cout << "obs[i].y: " << obs[i].y << " obs[i].scroll: " << scrollUpdate << std::endl;
+    }
+}
+
+void World::draw(SDL_Renderer* renderer) {
+    for (int i = 0; i < obs.size(); i++) {
+        if (i != 0) {
+            SDL_Rect targetRect = { obs[i].x - 15, obs[i].y - 10, obs[i].w + 30, obs[i].h + 20 };
+            SDL_RenderCopy(renderer, tileTexture, NULL, &targetRect);
+        } else {
+            SDL_Rect targetRect = { obs[i].x, obs[i].y - 15, obs[i].w, obs[i].h + 30 };
+            SDL_RenderCopy(renderer, fTileTexture, NULL, &targetRect);
+        }
     }
 }

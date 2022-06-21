@@ -16,7 +16,7 @@ class Player {
         void init(SDL_Renderer* renderer);
         SDL_Rect getRect();
         static SDL_Texture* loadImage(SDL_Renderer* renderer);
-        void draw(SDL_Renderer* renderer);
+        void draw(SDL_Renderer* renderer, int x, int y);
         void handleEvents(SDL_Event &event);
         bool jumping();
         void move(std::string collision, int collisionHeight);

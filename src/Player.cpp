@@ -10,20 +10,17 @@ SDL_Texture* texture;
 SDL_Rect rect;
 bool isJumping = false;
 float up, down, right, left;
-float dec = 0.1;
 float velocity, gravity;
 int lastAngle = 10;
 bool jumpQueue = false;
 double nowJump = 0, prepareJump = 0, deltaTimeJump = 0;
 double previousDeltaTime = 0, currentDeltaTime = 0, deltaTime = 0;
-double previousFallingDeltaTime = 0, currentFallingDeltaTime = 0, fallingDeltaTime = 0;
 bool flagLeft = false, flagRight = false;
 std::string lastSide = "right";
 bool hitHead = false;
-bool landed = false;
 bool hitOnce = false; // old collision system, prevents head from going into a rect
 bool innited = false;
-float scrollY = 0;
+int scrollY = 0, obstacleScrollY = 0;
 
 Player::Player() {
     rect.w = 50; 
@@ -53,8 +50,11 @@ SDL_Texture* Player::loadImage(SDL_Renderer* renderer) {
     return texture;
 }
 
-void Player::draw(SDL_Renderer* renderer) {
-    SDL_RenderCopyEx(renderer, texture, NULL, &rect, lastAngle, NULL, SDL_FLIP_HORIZONTAL);
+void Player::draw(SDL_Renderer* renderer, int x, int y) {
+    SDL_Rect newRect = { rect.x - x, rect.y - y - 2, rect.w, rect.h };
+    // std::cout << "newRect.x: " << newRect.x << "newRect.y: " << newRect.y << std::endl;
+    // std::cout << "player.x: " << rect.x << "player.y: " << rect.y << std::endl;
+    SDL_RenderCopyEx(renderer, texture, NULL, &newRect, lastAngle, NULL, SDL_FLIP_HORIZONTAL);
 }
 
 void Player::handleEvents(SDL_Event &event) {
@@ -78,6 +78,7 @@ void Player::handleEvents(SDL_Event &event) {
 }
 
 void Player::move(std::string collision, int collisionHeight) {
+    obstacleScrollY = 0;
     previousDeltaTime = currentDeltaTime;
     currentDeltaTime = SDL_GetTicks();
     deltaTime = ((currentDeltaTime - previousDeltaTime) * 0.001);
@@ -90,19 +91,6 @@ void Player::move(std::string collision, int collisionHeight) {
         if (innited) { // without does funny things when loading the game idk
             isJumping = true;
         }
-    }
-
-    if (collision == "collisionOnTop" && !isJumping) {
-        if (collisionHeight > 1) rect.y -= collisionHeight - 1;
-
-        velocity = 0;
-
-        flagRight = false;
-        flagLeft = false;
-
-        hitOnce = false;
-
-        std::cout << "hop";
     }
 
     if (collision == "collisionOnTop" && isJumping) {
@@ -133,7 +121,7 @@ void Player::move(std::string collision, int collisionHeight) {
         innited = true;
     }
 
-    if (!up && jumpQueue) { // let go of "up" key, loaded jump
+    if (!up && jumpQueue && collision != "false") { // let go of "up" key, loaded jump
         nowJump = SDL_GetTicks();
         deltaTimeJump = (nowJump - prepareJump) * 0.001;
 
@@ -204,7 +192,7 @@ void Player::move(std::string collision, int collisionHeight) {
                     rect.y = rect.y - velocity * deltaTime;
 
                     scrollY -= rect.y;
-                    // std::cout << scrollY << std::endl;
+                    // std::cout << "levelScroll: " << scrollY << std::endl;
 
                     rect.x = rect.x + 4;
                 } else {
@@ -255,12 +243,30 @@ void Player::move(std::string collision, int collisionHeight) {
         velocity = -600;
     }
 
+    if (collision == "collisionOnTop" && !isJumping) {
+        if (collisionHeight > 1) {
+            rect.y -= collisionHeight - 1;
+
+            // obstacleScrollY = collisionHeight;
+            // std::cout << "obstacleScrollY: " << obstacleScrollY << std::endl;
+        }
+
+        velocity = 0;
+
+        flagRight = false;
+        flagLeft = false;
+
+        hitOnce = false;
+    }
+
     if (collision != "false") {
         scrollY = 0;
     }
 }
 
 int Player::getScrollY() {
+    // scrollY += obstacleScrollY;
+    // std::cout << "getScrollY: " << scrollY << " obstacleScrollY: " << obstacleScrollY << " rect.y: " << rect.y << std::endl;
     return scrollY;
 }
 

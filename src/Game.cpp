@@ -1,6 +1,7 @@
 #include "Game.h"
 #include "Player.h"
 #include "World.h"
+#include "Background.h"
 #include "SDL_image.h"
 
 #include <iostream>
@@ -11,9 +12,14 @@ SDL_Renderer* Game::renderer;
 SDL_Texture* playerTexture;
 Player* player = nullptr;
 World* world = nullptr;
+Background* background = nullptr;
+
 std::string collision;
 int collisionHeight;
 SDL_Rect collisionRect;
+int updateScroll = 0;
+
+SDL_Rect camera = { 0, 0, WIDTH, HEIGHT};
 
 Game::Game() {
     window = NULL;
@@ -44,7 +50,10 @@ void Game::init() {
 
                     Player* player = new Player();
                     World* world = new World();
+                    background->init(renderer);
                     player->init(renderer);
+                    world->init(renderer);
+
                     // playerTexture = player->loadImage(renderer); 
                 }
             } else {
@@ -147,25 +156,42 @@ void Game::fixCollision(SDL_Rect a, SDL_Rect b, SDL_Rect collisionRect) {
 }
 
 void Game::update() {
+    SDL_Rect playerRect = player->getRect();
+
+    world->update(player->getScrollY());
     collision = "false";
-    checkIntersect(player->getRect(), world->getObs());
+    checkIntersect(playerRect, world->getObs());
     player->move(collision, collisionHeight);
+
+    camera.x = (playerRect.x + playerRect.w / 2) - WIDTH / 2;
+    camera.y = (playerRect.y + playerRect.h / 2) - HEIGHT / 2;
+
+    if (camera.x < 0) { 
+        camera.x = 0;
+    }
+
+    if (camera.y < 0 ) {
+        camera.y = 0;
+    }
+
+    if (camera.x > WIDTH - camera.w) {
+        camera.x = WIDTH - camera.w;
+    }
+
+    if (camera.y > HEIGHT - camera.h) {
+        camera.y = HEIGHT - camera.h;
+    }
 }
 
-// float Game::getDeltaTime() {
-//     oldDeltaTime = currentDeltaTime;
-//     currentDeltaTime = 0;
-//     deltaTime = (currentDeltaTime - oldDeltaTime) * 0.001;
-
-//     return deltaTime;
-// }
-
 void Game::render() {
-    SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
+    SDL_SetRenderDrawColor(renderer, 0, 75, 155, 200);
     SDL_RenderClear(renderer);
 
-    player->draw(renderer);
-    world->draw(renderer, player->getScrollY());
+    std::cout << "camera.x: " << camera.x << "camera.y: " << camera.y << std::endl;
+
+    background->draw(renderer, 0, 0, &camera);
+    player->draw(renderer, camera.x, camera.y);
+    world->draw(renderer);
 
     SDL_RenderPresent(renderer);
 }
