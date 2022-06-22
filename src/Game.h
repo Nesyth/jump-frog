@@ -9,8 +9,6 @@
 
 #define IMG_PATH "assets/character.png"
 #define BG_IMG_PATH "assets/background.png"
-#define TILE_IMG_PATH "assets/tile.png"
-#define FTILE_IMG_PATH "assets/floortile.png"
 #define WIDTH 800
 #define HEIGHT 600
 #define MAP_WIDTH 800

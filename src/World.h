@@ -5,6 +5,13 @@
 
 #include <vector>
 
+#define TILE_WIDTH 160
+#define TILE_HEIGHT 20
+
+#define TILE_IMG_PATH "assets/tile.png"
+#define FLOOR_TILE_IMG_PATH "assets/floortile.png"
+#define FINISH_TILE_IMG_PATH "assets/finishtile.png"
+
 class World {
     public:
         World();
@@ -12,7 +19,7 @@ class World {
         // void render();
         void init(SDL_Renderer* renderer);
         SDL_Texture* loadImage(SDL_Renderer* renderer);
-        int update (int scrollUpdate);
+        void update (int scrollUpdate);
         void draw(SDL_Renderer* renderer);
         std::vector<SDL_Rect> getObs();
 };

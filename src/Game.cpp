@@ -2,7 +2,9 @@
 #include "Player.h"
 #include "World.h"
 #include "Background.h"
+#include "Meter.h"
 #include "SDL_image.h"
+#include "SDL_ttf.h"
 
 #include <iostream>
 #include <vector>
@@ -10,9 +12,11 @@
 
 SDL_Renderer* Game::renderer;
 SDL_Texture* playerTexture;
+TTF_Font* font;
 Player* player = nullptr;
 World* world = nullptr;
 Background* background = nullptr;
+Meter* meter = nullptr;
 
 std::string collision;
 int collisionHeight;
@@ -40,21 +44,30 @@ void Game::init() {
                 std::cout << "Renderer created!\n";
                 int flags = IMG_INIT_PNG;
                 int initted = IMG_Init(flags);
-                if ((initted&flags) != flags) {
-                    std::cout << "IMG_Init: Failed to init required jpg and png support!\n";
-                    printf("IMG_Init: %s\n", IMG_GetError());
-                    isRunning = false;
+                if (TTF_Init() == -1) {
+                    printf("TTF_Init: %s\n", TTF_GetError());
                 } else {
-                    std::cout << "Yeah\n";
-                    isRunning = true;
+                    font = TTF_OpenFont("/Library/Fonts/Fascinate-Regular.ttf", 24);
+                    if (font == NULL) {
+                        fprintf(stderr, "error: font not found\n");
+                        exit(EXIT_FAILURE);
+                    }
+                    if ((initted&flags) != flags) {
+                        std::cout << "IMG_Init: Failed to init required jpg and png support!\n";
+                        printf("IMG_Init: %s\n", IMG_GetError());
+                        isRunning = false;
+                    } else {
+                        std::cout << "Yeah\n";
+                        isRunning = true;
 
-                    Player* player = new Player();
-                    World* world = new World();
-                    background->init(renderer);
-                    player->init(renderer);
-                    world->init(renderer);
+                        Player* player = new Player();
+                        World* world = new World();
+                        background->init(renderer);
+                        player->init(renderer);
+                        world->init(renderer);
 
-                    // playerTexture = player->loadImage(renderer); 
+                        // playerTexture = player->loadImage(renderer); 
+                    }
                 }
             } else {
                 std::cout << "Couldn't create a renderer\n";
@@ -107,8 +120,6 @@ void Game::fixCollision(SDL_Rect a, SDL_Rect b, SDL_Rect collisionRect) {
     int topA, topB;
     int bottomA, bottomB;
 
-    int counter = -1;
-
     leftA = a.x;
     rightA = a.x + a.w;
     topA = a.y;
@@ -144,54 +155,49 @@ void Game::fixCollision(SDL_Rect a, SDL_Rect b, SDL_Rect collisionRect) {
 
     collision = result;
     collisionHeight = collisionRect.h;
-
-    // if ((topA - bottomB >= 10 && topA - bottomB <= -10)) {
-    //     collision = "head";
-    // } else if ((bottomA - topB > -1 && bottomA - topB < 1) && 
-    // (rightA - leftB > 0 && leftA - rightB < 0)) {
-    //     collision = "onTop";
-    // } else {
-    //     collision = "onTop";
-    // }
 }
 
 void Game::update() {
     SDL_Rect playerRect = player->getRect();
 
-    world->update(player->getScrollY());
     collision = "false";
     checkIntersect(playerRect, world->getObs());
     player->move(collision, collisionHeight);
+    world->update(player->getRect().y);
+    meter->getPos(player->getRect().y);
 
-    camera.x = (playerRect.x + playerRect.w / 2) - WIDTH / 2;
-    camera.y = (playerRect.y + playerRect.h / 2) - HEIGHT / 2;
+    if (player->checkIfFinished(collision)) meter->isWinner(1);
 
-    if (camera.x < 0) { 
-        camera.x = 0;
-    }
+    // camera.x = (playerRect.x + playerRect.w / 2) - WIDTH / 2;
+    // camera.y = (playerRect.y + playerRect.h / 2) - HEIGHT / 2;
 
-    if (camera.y < 0 ) {
-        camera.y = 0;
-    }
+    // if (camera.x < 0) { 
+    //     camera.x = 0;
+    // }
 
-    if (camera.x > WIDTH - camera.w) {
-        camera.x = WIDTH - camera.w;
-    }
+    // if (camera.y < 0 ) {
+    //     camera.y = 0;
+    // }
 
-    if (camera.y > HEIGHT - camera.h) {
-        camera.y = HEIGHT - camera.h;
-    }
+    // if (camera.x > WIDTH - camera.w) {
+    //     camera.x = WIDTH - camera.w;
+    // }
+
+    // if (camera.y > HEIGHT - camera.h) {
+    //     camera.y = HEIGHT - camera.h;
+    // }
 }
 
 void Game::render() {
     SDL_SetRenderDrawColor(renderer, 0, 75, 155, 200);
     SDL_RenderClear(renderer);
 
-    std::cout << "camera.x: " << camera.x << "camera.y: " << camera.y << std::endl;
+    // std::cout << "camera.x: " << camera.x << "camera.y: " << camera.y << std::endl;
 
     background->draw(renderer, 0, 0, &camera);
     player->draw(renderer, camera.x, camera.y);
     world->draw(renderer);
+    meter->draw(renderer, font);
 
     SDL_RenderPresent(renderer);
 }
@@ -200,6 +206,8 @@ void Game::clean() {
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     // SDL_DestroyTexture(playerTexture);
+    TTF_Quit();
+    IMG_Quit();
     SDL_Quit();
 }
 

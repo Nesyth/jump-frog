@@ -18,9 +18,10 @@ double previousDeltaTime = 0, currentDeltaTime = 0, deltaTime = 0;
 bool flagLeft = false, flagRight = false;
 std::string lastSide = "right";
 bool hitHead = false;
-bool hitOnce = false; // old collision system, prevents head from going into a rect
+bool hitOnce = false; //prevents head from going into a rect
 bool innited = false;
 int scrollY = 0, obstacleScrollY = 0;
+int oldPosY = 0;
 
 Player::Player() {
     rect.w = 50; 
@@ -38,6 +39,11 @@ Player::~Player() {
 
 SDL_Rect Player::getRect() {
     return rect;
+}
+
+void Player::setPos(int x, int y) {
+    rect.x += x;
+    rect.y += y;
 }
 
 void Player::init(SDL_Renderer* renderer) {
@@ -78,7 +84,6 @@ void Player::handleEvents(SDL_Event &event) {
 }
 
 void Player::move(std::string collision, int collisionHeight) {
-    obstacleScrollY = 0;
     previousDeltaTime = currentDeltaTime;
     currentDeltaTime = SDL_GetTicks();
     deltaTime = ((currentDeltaTime - previousDeltaTime) * 0.001);
@@ -95,6 +100,8 @@ void Player::move(std::string collision, int collisionHeight) {
 
     if (collision == "collisionOnTop" && isJumping) {
         isJumping = false;
+
+        velocity = 0;
     }
 
     if (collision == "collisionHead") {
@@ -125,19 +132,19 @@ void Player::move(std::string collision, int collisionHeight) {
         nowJump = SDL_GetTicks();
         deltaTimeJump = (nowJump - prepareJump) * 0.001;
 
-        if (deltaTimeJump < 0.1 && deltaTimeJump > 0) {
-            velocity = 50.0;
-        } else if (deltaTimeJump < 0.2 && deltaTimeJump > 0.1) {
+        if (deltaTimeJump < 0.1 && deltaTimeJump >= 0) {
+            velocity = 30.0;
+        } else if (deltaTimeJump < 0.2 && deltaTimeJump >= 0.1) {
             velocity = 100.0;
-        } else if (deltaTimeJump < 0.3 && deltaTimeJump > 0.2) {
+        } else if (deltaTimeJump < 0.3 && deltaTimeJump >= 0.2) {
             velocity = 145.0;
-        } else if (deltaTimeJump < 0.4 && deltaTimeJump > 0.3) {
+        } else if (deltaTimeJump < 0.4 && deltaTimeJump >= 0.3) {
             velocity = 185.0;
-        } else if (deltaTimeJump < 0.5 && deltaTimeJump > 0.4) {
+        } else if (deltaTimeJump < 0.5 && deltaTimeJump >= 0.4) {
             velocity = 220.0;
-        } else if (deltaTimeJump < 0.6 && deltaTimeJump > 0.5) {
+        } else if (deltaTimeJump < 0.6 && deltaTimeJump >= 0.5) {
             velocity = 250.0;
-        } else if (deltaTimeJump < 0.7 && deltaTimeJump > 0.6) {
+        } else if (deltaTimeJump < 0.7 && deltaTimeJump >= 0.6) {
             velocity = 270.0;
         } else {
             velocity = 285.0;
@@ -148,16 +155,17 @@ void Player::move(std::string collision, int collisionHeight) {
     }
 
     if (isJumping) { // while jumping
+        jumpQueue = false;
         if (lastSide == "left") { // check frog's current side
             lastAngle = -10;
             if (!hitHead) {
                 if (!flagLeft) {
-                    scrollY = rect.y;
+                    // scrollY = rect.y;
 
                     velocity = velocity + gravity * deltaTime;
                     rect.y = rect.y - velocity * deltaTime;
 
-                    scrollY -= rect.y;
+                    // scrollY -= rect.y;
 
                     rect.x = rect.x - 4;
                 } else {
@@ -166,12 +174,12 @@ void Player::move(std::string collision, int collisionHeight) {
                 }
             } else {
                 if (!flagLeft) {
-                    scrollY = rect.y;
+                    // scrollY = rect.y;
 
                     velocity = velocity + gravity * deltaTime;
                     rect.y = rect.y - velocity * deltaTime;
 
-                    scrollY -= rect.y;
+                    // scrollY -= rect.y;
 
                     rect.x = rect.x - 4;
                 } else {
@@ -186,13 +194,12 @@ void Player::move(std::string collision, int collisionHeight) {
             lastAngle = 10;
             if (!hitHead) {
                 if (!flagRight) {
-                    scrollY = rect.y;
+                    // scrollY = rect.y;
 
                     velocity = velocity + gravity * deltaTime;
                     rect.y = rect.y - velocity * deltaTime;
 
-                    scrollY -= rect.y;
-                    // std::cout << "levelScroll: " << scrollY << std::endl;
+                    // scrollY -= rect.y;
 
                     rect.x = rect.x + 4;
                 } else {
@@ -201,12 +208,12 @@ void Player::move(std::string collision, int collisionHeight) {
                 }
             } else {
                 if (!flagRight) {
-                    scrollY = rect.y;
+                    // scrollY = rect.y;
 
                     velocity = velocity + gravity * deltaTime;
                     rect.y = rect.y - velocity * deltaTime;
 
-                    scrollY -= rect.y;
+                    // scrollY -= rect.y;
 
                     rect.x = rect.x + 4;
                 } else {
@@ -243,12 +250,9 @@ void Player::move(std::string collision, int collisionHeight) {
         velocity = -600;
     }
 
-    if (collision == "collisionOnTop" && !isJumping) {
+    if (collision == "collisionOnTop" && !isJumping) { // collision fix
         if (collisionHeight > 1) {
-            rect.y -= collisionHeight - 1;
-
-            // obstacleScrollY = collisionHeight;
-            // std::cout << "obstacleScrollY: " << obstacleScrollY << std::endl;
+            rect.y -= collisionHeight/2;
         }
 
         velocity = 0;
@@ -262,12 +266,19 @@ void Player::move(std::string collision, int collisionHeight) {
     if (collision != "false") {
         scrollY = 0;
     }
+
+    oldPosY = rect.y;
 }
 
 int Player::getScrollY() {
-    // scrollY += obstacleScrollY;
-    // std::cout << "getScrollY: " << scrollY << " obstacleScrollY: " << obstacleScrollY << " rect.y: " << rect.y << std::endl;
     return scrollY;
+}
+
+bool Player::checkIfFinished(std::string collision) {
+    if (rect.y < 100 && collision == "collisionOnTop") 
+        return true;
+    else 
+        return false;
 }
 
 void Player::destroyImage() {
