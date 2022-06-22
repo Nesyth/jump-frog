@@ -9,6 +9,8 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <iomanip>
+#include <fstream>
 
 SDL_Renderer* Game::renderer;
 SDL_Texture* playerTexture;
@@ -22,6 +24,11 @@ std::string collision;
 int collisionHeight;
 SDL_Rect collisionRect;
 int updateScroll = 0;
+std::string highestScore;
+bool finished = 0;
+
+std::fstream scoreFile("assets/score.txt");
+std::string content((std::istreambuf_iterator<char>(scoreFile) ), (std::istreambuf_iterator<char>()));
 
 SDL_Rect camera = { 0, 0, WIDTH, HEIGHT};
 
@@ -166,7 +173,23 @@ void Game::update() {
     world->update(player->getRect().y);
     meter->getPos(player->getRect().y);
 
-    if (player->checkIfFinished(collision)) meter->isWinner(1);
+    if (player->checkIfFinished(collision)) { 
+        if (!finished) {
+            finished = true;
+            int endTime = SDL_GetTicks();
+
+            if (endTime < std::stoi(content)) {
+                std::remove("assets/score.txt");
+
+                std::ofstream outfile ("assets/score.txt");
+                outfile << std::to_string(endTime);
+                std::cout << std::setprecision(2);
+                std::cout << std::fixed << "New highest score: " << endTime/1000 << "s" << std::endl;
+                outfile.close();
+            }
+        }
+        meter->isWinner(1);
+    }
 
     // camera.x = (playerRect.x + playerRect.w / 2) - WIDTH / 2;
     // camera.y = (playerRect.y + playerRect.h / 2) - HEIGHT / 2;
