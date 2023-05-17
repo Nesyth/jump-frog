@@ -43,7 +43,7 @@ Game::~Game() {}
 void Game::init() {
     if (SDL_Init(SDL_INIT_EVERYTHING) == 0) {
         std::cout << "SDL innited!\n";
-        window = SDL_CreateWindow("SGD Platformer", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, 0);
+        window = SDL_CreateWindow("Jump-Frog", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, 0);
         if (window) {
             std::cout << "Window created!\n";
             renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
@@ -64,7 +64,7 @@ void Game::init() {
                         printf("IMG_Init: %s\n", IMG_GetError());
                         isRunning = false;
                     } else {
-                        std::cout << "Yeah\n";
+                        std::cout << "Window loaded!\n";
                         isRunning = true;
 
                         Player* player = new Player();
